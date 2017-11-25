@@ -7,22 +7,32 @@
 //
 
 import SpriteKit
+import AVFoundation
 
 class GameScene: SKScene, SKPhysicsContactDelegate{
     
     var scrollNode:SKNode!
     var wallNode:SKNode!
     var bird:SKSpriteNode!
+    var appleNode:SKNode!
+    
+    //AVAudioPlayerのインスタンスを作成
+    var audioPlayerInstance : AVAudioPlayer! = nil
+    
+    
     
     //衝突判定カテゴリー
     let birdCategory: UInt32 = 1 << 0   //0...00001
     let groundCategory: UInt32 = 1 << 1 //0...00010
     let wallCategory: UInt32 = 1 << 2   //0...00100
     let scoreCategory: UInt32 = 1 << 3  //0...01000
+    let appleCategory: UInt32 = 1 << 4  //0...10000
     
     //スコア
     var score = 0
+    var itemScore = 0
     var scoreLabelNode:SKLabelNode!
+    var itemScoreLabelNode:SKLabelNode!
     var bestScoreLabelNode:SKLabelNode!
     let userDefaults:UserDefaults = UserDefaults.standard
     
@@ -44,12 +54,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         wallNode = SKNode()
         scrollNode.addChild(wallNode)
         
+        //りんご用のノード
+        appleNode = SKNode()
+        scrollNode.addChild(appleNode)
+        
         //各種スプライトを生成する処理をメソッドに分割
         setupGround()
         setupCloud()
         setupWall()
         setupBird()
         setupScoreLabel()
+        setupApple()
+        
+        //サウンドファイルのパスを生成
+        let soundFilePath = Bundle.main.path(forResource: "get", ofType: "mp3")!
+        let sound:URL = URL(fileURLWithPath: soundFilePath)
+        
+        //AVAoudioPlayerのインスタンスを作成
+        do {
+            audioPlayerInstance = try AVAudioPlayer(contentsOf: sound, fileTypeHint: nil)
+        }catch{
+            print("AVAudioPlayerインスタンス作成失敗")
+        }
+        //バッファに保持していつでも再生できるようにする
+        audioPlayerInstance.prepareToPlay()
     }
     
     //画面をタップした時に呼ばれる
@@ -256,7 +284,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         //衝突のカテゴリー設定
         bird.physicsBody?.categoryBitMask = birdCategory
         bird.physicsBody?.collisionBitMask = groundCategory | wallCategory //当たった時に跳ね返る相手
-        bird.physicsBody?.contactTestBitMask = groundCategory | wallCategory
+        bird.physicsBody?.contactTestBitMask = groundCategory | wallCategory //当たった時にdidBeginContactを呼び出す
         
         //アニメーションを設定
         bird.run(flap)
@@ -264,6 +292,64 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         //スプライトを追加する
         addChild(bird)
     }
+    
+    func setupApple() {
+        let apple = SKNode()
+        //りんごの画像を読み込む
+        let appleTexture = SKTexture(imageNamed: "apple")
+        appleTexture.filteringMode = SKTextureFilteringMode.linear
+        
+        //移動する距離を計算
+        let movingDistance = CGFloat(self.frame.size.width + appleTexture.size().width)
+        
+        //画面外まで移動するアクションを作成
+        let moveApple = SKAction.moveBy(x: -movingDistance, y: 0, duration: 4.0)
+        
+        //自身を取り除くアクションを作成
+        let removeApple = SKAction.removeFromParent()
+        
+        //２つのアニメーションを順に実行するアクションを作成
+        let appleAnimation = SKAction.sequence([moveApple, removeApple])
+        
+        //りんごを生成するアクションを作成
+        let createAppleAnimation = SKAction.run({
+            //りんご関連のノードを乗せるノードを作成
+            //let apple = SKNode()
+            apple.position = CGPoint(x: self.frame.size.width + appleTexture.size().width / 2, y: 0.0)
+            apple.zPosition = -55.0 //壁より奥
+            
+            //りんごのY軸の設定
+            let apple_y = arc4random_uniform(UInt32(self.frame.size.height))
+            
+            //りんごの作成
+            let Apple = SKSpriteNode(texture: appleTexture)
+            Apple.position = CGPoint(x: 0.0, y: CGFloat(apple_y) - 1)
+            
+            //スプライトに物理演算を設定する
+            Apple.physicsBody = SKPhysicsBody(rectangleOf: appleTexture.size())
+            Apple.physicsBody?.categoryBitMask = self.appleCategory
+            Apple.physicsBody?.isDynamic = false
+            Apple.physicsBody?.contactTestBitMask = self.birdCategory
+            
+            
+            
+            apple.addChild(Apple)
+            apple.run(appleAnimation)
+            
+            self.appleNode.addChild(apple)
+            
+        })
+        //次のりんご作成までの待ち時間のアクションを作成
+        let waitAnimation = SKAction.wait(forDuration: TimeInterval(1 + 2 * CGFloat(arc4random_uniform(2))))
+        
+        //壁を作成->待ち時間->壁を作成を無限に繰り返すアクションを作成
+        let repeatForeverAnimation = SKAction.repeatForever(SKAction.sequence([createAppleAnimation, waitAnimation]))
+        
+        appleNode.run(repeatForeverAnimation)
+        
+    }
+    
+
     
     //SKPhysicsContactDelegateのメソッド。衝突した時に呼ばれる
     func didBegin(_ contact: SKPhysicsContact) {
@@ -278,10 +364,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             score += 1
             scoreLabelNode.text = "Score:\(score)"
             
+            
             //ベストスコア更新か確認する
             var bestScore = userDefaults.integer(forKey: "BEST")
-            if score > bestScore {
-                bestScore = score
+            if score + itemScore > bestScore {
+                bestScore = score + itemScore
+                bestScoreLabelNode.text = "Best Score:\(bestScore)"
+                userDefaults.set(bestScore, forKey: "BEST")
+                userDefaults.synchronize()
+            }
+            
+            
+            
+        } else if (contact.bodyA.categoryBitMask & appleCategory) == appleCategory || (contact.bodyB.categoryBitMask & appleCategory) == appleCategory {
+            //りんごと衝突した
+            
+            //効果音を再生する
+            //audioPlayerInstance.play()
+            
+            print("itemScoreUp")
+            itemScore += 1
+            itemScoreLabelNode.text = "Apple:\(itemScore)"
+            
+            //自身を取り除く
+            
+            //ベストスコア更新か確認する
+            var bestScore = userDefaults.integer(forKey: "BEST")
+            if score + itemScore > bestScore {
+                bestScore = score + itemScore
                 bestScoreLabelNode.text = "Best Score:\(bestScore)"
                 userDefaults.set(bestScore, forKey: "BEST")
                 userDefaults.synchronize()
@@ -307,12 +417,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         score = 0   //スコアを０に戻す
         scoreLabelNode.text = String("Score:\(score)")
         
+        itemScore = 0
+        itemScoreLabelNode.text = String("Apple:\(itemScore)")
+        
         bird.position = CGPoint(x: self.frame.size.width*0.2, y: self.frame.size.height * 0.7)  //鳥の位置を初期位置に戻す
         bird.physicsBody?.velocity = CGVector.zero  //鳥の落下速度を０に戻す
         bird.physicsBody?.collisionBitMask = groundCategory | wallCategory
         bird.zRotation = 0.0
         
         wallNode.removeAllChildren()    //壁をすべて取り除く
+        appleNode.removeAllChildren()   //りんごをすべて取り除く
         
         bird.speed = 1
         scrollNode.speed = 1
@@ -338,5 +452,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         let bestScore = userDefaults.integer(forKey: "BEST")
         bestScoreLabelNode.text = "Best Score:\(bestScore)"
         self.addChild(bestScoreLabelNode)
+        
+        itemScore = 0
+        itemScoreLabelNode = SKLabelNode()
+        itemScoreLabelNode.fontColor = UIColor.black
+        itemScoreLabelNode.position = CGPoint(x: 10, y: self.frame.size.height - 90)
+        itemScoreLabelNode.zPosition = 100 //一番手前に表示
+        itemScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
+        itemScoreLabelNode.text = "Apple:\(itemScore)"
+        self.addChild(itemScoreLabelNode)
     }
 }

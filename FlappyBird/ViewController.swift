@@ -8,9 +8,13 @@
 
 import UIKit
 import SpriteKit
+import AudioToolbox
+
 
 class ViewController: UIViewController {
 
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -28,6 +32,7 @@ class ViewController: UIViewController {
         
         //ビューにシーンを表示する
         skView.presentScene(scene)
+        
         
 }
 
