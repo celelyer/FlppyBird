@@ -16,7 +16,7 @@
 		A52376221FC3155A0030CBB1 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = A52376211FC3155A0030CBB1 /* GameScene.swift */; };
 		A52376241FC9A27C0030CBB1 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A52376231FC9A27C0030CBB1 /* AudioToolbox.framework */; };
 		A52376261FC9A2E20030CBB1 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A52376251FC9A2E20030CBB1 /* AVFoundation.framework */; };
-		A52376281FC9A34C0030CBB1 /* get.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A52376271FC9A34C0030CBB1 /* get.mp3 */; };
+		A523762A1FCAF1850030CBB1 /* get.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = A52376291FCAF1850030CBB1 /* get.mp3 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,7 +31,7 @@
 		A52376211FC3155A0030CBB1 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 		A52376231FC9A27C0030CBB1 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		A52376251FC9A2E20030CBB1 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		A52376271FC9A34C0030CBB1 /* get.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; name = get.mp3; path = ../../../../../../../Downloads/get.mp3; sourceTree = "<group>"; };
+		A52376291FCAF1850030CBB1 /* get.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = get.mp3; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,7 +75,7 @@
 				A52376211FC3155A0030CBB1 /* GameScene.swift */,
 				A52376151FC30D880030CBB1 /* LaunchScreen.storyboard */,
 				A52376181FC30D880030CBB1 /* Info.plist */,
-				A52376271FC9A34C0030CBB1 /* get.mp3 */,
+				A52376291FCAF1850030CBB1 /* get.mp3 */,
 			);
 			path = FlappyBird;
 			sourceTree = "<group>";
@@ -149,8 +149,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A52376281FC9A34C0030CBB1 /* get.mp3 in Resources */,
 				A52376171FC30D880030CBB1 /* LaunchScreen.storyboard in Resources */,
+				A523762A1FCAF1850030CBB1 /* get.mp3 in Resources */,
 				A52376141FC30D880030CBB1 /* Assets.xcassets in Resources */,
 				A52376121FC30D880030CBB1 /* Main.storyboard in Resources */,
 			);

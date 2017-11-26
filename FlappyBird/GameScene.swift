@@ -379,7 +379,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             
         } else if (contact.bodyA.categoryBitMask & appleCategory) == appleCategory || (contact.bodyB.categoryBitMask & appleCategory) == appleCategory {
             //りんごと衝突した
-            
+            print(appleNode)
             //効果音を再生する
             audioPlayerInstance.play()
             
