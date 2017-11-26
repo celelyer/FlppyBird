@@ -15,6 +15,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     var wallNode:SKNode!
     var bird:SKSpriteNode!
     var appleNode:SKNode!
+    var apple:SKNode!
+
     
     //AVAudioPlayerのインスタンスを作成
     var audioPlayerInstance : AVAudioPlayer! = nil
@@ -57,6 +59,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         //りんご用のノード
         appleNode = SKNode()
         scrollNode.addChild(appleNode)
+        
         
         //各種スプライトを生成する処理をメソッドに分割
         setupGround()
@@ -294,7 +297,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     }
     
     func setupApple() {
-        let apple = SKNode()
         //りんごの画像を読み込む
         let appleTexture = SKTexture(imageNamed: "apple")
         appleTexture.filteringMode = SKTextureFilteringMode.linear
@@ -314,9 +316,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         //りんごを生成するアクションを作成
         let createAppleAnimation = SKAction.run({
             //りんご関連のノードを乗せるノードを作成
-            //let apple = SKNode()
-            apple.position = CGPoint(x: self.frame.size.width + appleTexture.size().width / 2, y: 0.0)
-            apple.zPosition = -55.0 //壁より奥
+            self.apple = SKNode()
+            self.apple.position = CGPoint(x: self.frame.size.width + appleTexture.size().width / 2, y: 0.0)
+            self.apple.zPosition = -55.0 //壁より奥
             
             //りんごのY軸の設定
             let apple_y = arc4random_uniform(UInt32(self.frame.size.height))
@@ -332,11 +334,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             Apple.physicsBody?.contactTestBitMask = self.birdCategory
             
             
+            self.apple.addChild(Apple)
+            self.apple.run(appleAnimation)
             
-            apple.addChild(Apple)
-            apple.run(appleAnimation)
-            
-            self.appleNode.addChild(apple)
+            self.appleNode.addChild(self.apple)
             
         })
         //次のりんご作成までの待ち時間のアクションを作成
@@ -380,13 +381,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             //りんごと衝突した
             
             //効果音を再生する
-            //audioPlayerInstance.play()
+            audioPlayerInstance.play()
             
             print("itemScoreUp")
             itemScore += 1
             itemScoreLabelNode.text = "Apple:\(itemScore)"
             
             //自身を取り除く
+            self.appleNode.removeChildren(in: [self.apple])
             
             //ベストスコア更新か確認する
             var bestScore = userDefaults.integer(forKey: "BEST")
