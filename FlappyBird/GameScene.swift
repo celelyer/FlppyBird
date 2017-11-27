@@ -388,7 +388,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             itemScoreLabelNode.text = "Apple:\(itemScore)"
             
             //自身を取り除く
-            self.appleNode.removeChildren(in: [self.apple])
+            if contact.bodyA.categoryBitMask & appleCategory == appleCategory{
+                contact.bodyA.node?.removeFromParent()
+            }else{
+                contact.bodyB.node?.removeFromParent()
+            }
             
             //ベストスコア更新か確認する
             var bestScore = userDefaults.integer(forKey: "BEST")
